@@ -1,0 +1,46 @@
+netAll(os1,w);;
+- : float list = [3.; -3.; 3.; -3.]
+netAll(updateN(os3,w,0.0,1),w);;
+- : float list = [-1.; -1.; 1.; 1.]
+
+netUnit(os1,(hd w));;
+- : float = 3.
+netUnit(os2,(hd w));;
+- : float = 3.
+
+hop11Activation(0.0,0.0,1.0);;
+- : float = 1.
+hop11Activation(50.0,0.0,-1.0);;
+- : float = 1.
+
+nextState(os1,w,0.0);;
+- : float list = [1.; -1.; 1.; -1.]
+nextState(os2,w,0.0);;
+- : float list = [1.; -1.; 1.; -1.]
+
+
+energy(os1,w);;
+- : float = -6.
+energy(os2,w);;
+- : float = 0.
+energy(os3,w);;
+- : float = 2.
+
+updateN(os3,w,0.0,1);;
+- : float list = [1.; 1.; -1.; -1.]
+updateN(os3,w,0.0,2);;
+- : float list = [-1.; -1.; 1.; 1.]
+
+findsEquilibrium(os3,w,0.0,100);;
+- : bool = false
+findsEquilibrium(os2,w3,0.0,100);;
+- : bool = true
+
+hopTrainAstate(os1);;
+- : float list list =
+[[0.; -1.; 1.; -1.]; [-1.; 0.; -1.; 1.]; [1.; -1.; 0.; -1.];
+ [-1.; 1.; -1.; 0.]]
+hopTrainAstate(os2);;
+- : float list list =
+[[0.; 1.; -1.; 1.]; [1.; 0.; -1.; 1.]; [-1.; -1.; 0.; -1.];
+ [1.; 1.; -1.; 0.]]

@@ -1,0 +1,147 @@
+(***********************************
+Daniel Mecca
+CPSC 352 Assignment 1. 
+Neuro Networks with lambda Calculuous 
+***********************************)
+
+open List;;
+
+
+let rec netUnit =function(state,weight) ->
+	if(tl state == []) 
+		then ((List.hd state) *. (List.hd weight))
+	else ((List.hd state) *. (List.hd weight)) +. netUnit(List.tl state, List.tl weight);;
+
+let rec netAll = function(state, weight) ->
+	if(weight ==[])
+		then []
+	else netUnit(state, (hd weight)) :: netAll(state,tl weight);;
+
+let hop11Activation  = function(net,alpha,oldo) ->
+	if(net > alpha)
+		then 1.
+	else
+		if (net < alpha)
+			then -1.
+		else oldo;;
+
+let rec findState = function(net,state,alpha)->
+	if(state ==[] && net ==[])
+		then []
+	else
+		hop11Activation(List.hd net, alpha, List.hd state) :: findState(List.tl net ,List.tl state,alpha); ;;
+
+let nextState = function(currentState, weightMatrix,alpha) ->
+	if(currentState == [])
+		then []
+	else
+		findState(netAll(currentState,weightMatrix), currentState, alpha);;
+
+let rec updateN = function (currentState, weightMatrix, alpha, n)->
+	if(n==0)
+		then currentState
+	else 
+		updateN(nextState(currentState,weightMatrix,alpha) , weightMatrix , alpha, n-1);;
+
+
+let rec findsEquilibrium = function(initialState, weightMatrix, alpha, range)->
+	if(range == 0)
+		then false
+	else
+		if(updateN(initialState, weightMatrix, alpha, range) = updateN(initialState, weightMatrix, alpha, range-1))
+			then true
+		else
+			false;;
+
+let rec getStateSize = function(aList) ->
+	if(aList = [])
+		then 0
+	else
+		1 + getSize(List.tl aList);;
+
+let rec makeWeight =function(state, rank, pos) ->
+	if(rank >= getSize(state))
+		then []
+	else
+		if(pos == getSize(state))
+			then makeWeight(state,rank+1, 0)
+		else
+			if(rank == pos)
+				then 0. :: makeWeight(state, rank, pos+1)
+			else
+				(List.nth state rank) *. (List.nth state pos) ::  makeWeight(state, rank, pos+1) ;;
+
+
+
+let rec build = function (state,value,valP,x) ->
+	if(state == [])
+		then []
+	else 
+		if(x == valP)
+			then 0. :: build(List.tl state,value,valP,x+1)
+		else
+			(value *. List.hd state) :: build(List.tl state,value,valP,x+1);;
+
+
+
+let rec dubBuild = function(state, state_holder, pos) ->
+	if(state == [])
+		then []
+	else
+		build(state_holder, List.hd state, pos, 0) :: dubBuild(List.tl state, state_holder, pos+1);;
+
+let hopTrainAstate = function(state) ->
+	dubBuild(state,state,0);;
+
+
+
+let rec addList = function(list_1,list_2) ->
+	if(list_1 ==[] && list_2 ==[])
+		then []
+	else
+		List.hd list_1 +. List.hd list_2 :: addList(List.tl list_1, List.tl list_2);;
+
+let rec addDoubleList = function(d_list, d_list2) ->
+	if(d_list ==[] && d_list2==[])
+		then d_list
+	else
+		addList(List.hd d_list, List.hd d_list2) :: addDoubleList(List.tl d_list, List.tl d_list2);;
+
+
+(**
+Worker for the hop Train Takes List of weights from train
+and combines them to create single matrix. 
+**)
+
+let rec addWeightList =function (weights) ->
+	if(weights == [])
+		then []
+	else
+		if(List.tl weights == [])
+			then List.hd weights
+		else
+			if(List.tl(List.tl weights) == [])
+				then addWeightList([addDoubleList(List.hd weights, List.hd(List.tl weights))])
+			else
+				addWeightList(addDoubleList(List.hd weights, List.hd(List.tl weights)) :: List.tl(List.tl weights));;
+
+
+let rec hopTrain = function(allStates) ->
+	if(allStates == [])
+		then []
+	else
+		if(List.tl allStates == [])
+			then addWeightList(hopTrainAstate(List.hd allStates)  :: hopTrain(List.tl allStates) :: [])
+		else 
+			addWeightList(hopTrainAstate(List.hd allStates)  :: hopTrain(List.tl allStates) :: []);;
+
+
+
+
+
+
+let rec energy = function(state,weightMatrix) ->
+	if(weightMatrix==[])
+		then 0.
+	else
+		-(0.5) *. (List.nth state (getStateSize(state)-getStateSize(weightMatrix))) *. netUnit(state, List.hd weightMatrix) +. energy(state,List.tl weightMatrix);;
